@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head>
+  
+  <meta charset="ISO-8859-1">
+
+  
+  <link rel="stylesheet" type="text/css" href="css/style.css">
+  <title>Hulton Hotels</title>
+
+  
+  
+  <script type="text/javascript">
+function validate_form(){
+	var un = document.forms["formAd"]["username"].value;
+	var pw = document.forms["formAd"]["password"].value;
+	if ((un === "admin") && (pw === "password")){
+		
+		return true;
+	}
+	alert("Incorrect Username and Password!");
+	return false;
+}
+  </script>
+</head><body>
+<h4 align="center">Employee Log In<br>
+</h4>
+
+<ul>
+</ul>
+
+<form name="formAd" action="ReservationStatistics.html" method="post" onsubmit="return validate_form()">
+  <div align="center">
+  <table>
+    <tbody>
+      <tr>
+        <td>Username</td>
+        <td><input name="username" placeholder="username" required=""></td>
+      </tr>
+      <tr>
+        <td>Password</td>
+        <td><input name="adminpassword" placeholder="password"></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div align="center"> <input value="Log In" type="submit"> </div>
+</form>
+
+</body></html>

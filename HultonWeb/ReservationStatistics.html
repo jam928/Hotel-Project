@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<title>Hulton Hotels</title>
+<script type="text/javascript">
+function validate_form(){
+	var check_in = document.forms["form1"]["Begin-Date"].value;
+	var check_out = document.forms["form1"]["End-Date"].value;
+	var date1 = new Date(check_in);
+	var date2 = new Date(check_out);
+	if (date2 < date1){
+		alert("Check-out date cannot be before check-in date");
+		return false;
+	}
+	return true;
+}
+</script>
+</head>
+<body>
+<h1 >Reservation Statistics</h1>
+<ul>
+<li><a href="Welcome.jsp">Home</a></li>
+<li><a class="active" href="ReservationStatistics.html">Administrator</a></li>
+</ul>
+
+<form name="form1" action="getStatistics.jsp" method="post" onsubmit ="return validate_form()">
+	<div align="center">
+		<table>
+			
+				<td>Begin Date</td>
+				<td><input type="date" name="beginDate" required></td>
+			</tr>
+			<tr>
+				<td>End Date</td>
+				<td><input type="date" name="endDate" required></td>
+			</tr>
+			<tr>
+				<td>Select a Reservation Statistic</td>
+				<td><select name="res_statistics" required>
+                                        <option value="highest_rated_room">Highest rated room type</option>
+                                         <option value="five_best_customers">5 best customers</option>
+                                        <option value="highest_rated_breakfast">Highest Rated Breakfast Type</option>
+                                         <option value="highest_rated_service">Highest Rated Service Type</option>
+                                    </select>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div align="center">
+	<input type="submit" value="Book">
+	</div>
+</form>
+</body>
+</html>

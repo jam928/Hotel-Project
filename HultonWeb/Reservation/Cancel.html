@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html><head>
+  
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>Make a reservation</title>
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+
+    <script src="jquery.min.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="jquery.easing.js"></script>
+    
+  <script type="text/javascript">
+    
+    
+    function validate_dates(check_in, check_out){
+	var date1 = new Date(check_in);
+	var date2 = new Date(check_out);
+	if (date2 < date1){
+		alert("Check-out date cannot be before check-in date");
+		return false;
+	}
+	return true;
+    }
+
+    
+    $(document).ready( function() {
+        // set up the datepicker widgets for checkin and checkout
+        $( ".date_check" ).datepicker({dateFormat: "yy-mm-dd"});
+        
+        $("#div_roomslist").on("click", ".img_cancel", function() {
+           
+            if (confirm('Are you sure you want cancel this reservation for room ' + $(this).data("room") + '?')) {
+                // delete the reservation with the given invoice number
+                
+                var id = $(this).data("id");
+                var div = $(".room:has(img[data-id='" + id + "'])");
+                
+                $.ajax({
+                    url: "delete_reservation.jsp",
+                    data: "invoiceno=" + id,
+                    success: function(result){
+                        
+                        // remove the reservation from the list
+                        div.remove();
+                        
+                        $('#console').append('Reservation deleted. ');
+                    },
+                    error: function(result){ 
+                        $('#console').append('An error occurred deleting the reservation. ');
+                    }  
+
+                });                
+            }        
+        
+        });
+        
+        // populate the screen with reservations that are already in the system for t his user
+        $.ajax({
+            url: "get_reservations.jsp", 
+            success: function(result){
+
+                var html;
+
+                $.each(result, function(k, v) {
+                    html = "<div class=\"room\"><h1>" +  v.Description + "</h1>" + 
+                            "<p>Room <span class=\"room\">" + v.Room_no + "</span>" +
+                            "<span class=\"date_checkin\">" + v.InDate + "</span>" +
+                            "<span class=\"date_checkout\">" + v.OutDate + "</span>" +
+                            "<img src=\"redx.png\" alt=\"Cancel this reservation\" data-id=\"" + v.InvoiceNo + "\" data-room=\"" + v.Room_no + "\"class=\"img_cancel\">" +                             
+                            "</p></div>";
+
+                });
+
+
+                $("#div_roomslist").html(html);
+
+            },
+            error: function() {
+                $('#console').append('An error occurred getting the reservations. ');
+            }           
+        });
+        
+        
+        // Scroll automatically to the bottom of a div as it is continually appended/written to
+        $("#console").bind("append", function() { 
+            $(this).animate({ scrollTop: $(this)[0].scrollHeight }, 180, "easeOutExpo"); 
+        });
+
+    }); //doc.ready
+
+
+  </script>
+
+    
+</head><body>
+<h1>Cancel A Reservation</h1>
+<ul>
+<li><a class="active" href="../Welcome.jsp">Home</a></li>
+<li><a href="../ReservationStatistics.html">Administrator</a></li>
+</ul>
+  
+<div id="console" ></div>
+
+<div id="div_rooms" style="clear:both">
+    
+    <div id="div_roomslist" style="float:left;width:66%;"></div>
+    <div id ="div_roomsprice" style="float:right;width:33%;">
+
+    </div>
+</div>
+
+
+</body></html>
+

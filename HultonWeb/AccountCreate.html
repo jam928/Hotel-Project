@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html><head>
+  <meta charset="ISO-8859-1">
+  <title>Hulton Hotels</title>
+  <script type="text/javascript">
+
+function validate_form(){
+    
+    var phone_user = document.forms["formU"]["phone"].value;
+    var phoneno = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+    
+    if(phone_user.match(phoneno)) {
+        return true;
+    } else {
+        alert("Phone MUST be XXX-XXX-XXXX ");
+        return false;
+    }
+
+}
+  </script>
+</head><body>
+<h4 align="center">User Account Creation<br>
+</h4>
+<form name="formU" action="makeAcc.jsp" method="post" onsubmit="return validate_form()">
+  <div align="center">
+  <table>
+    <tbody>
+      <tr>
+        <td>Name</td>
+        <td><input name="name" placeholder="Name" required=""></td>
+      </tr>
+      <tr>
+        <td>Address</td>
+        <td><input name="address" placeholder="Address"></td>
+      </tr>
+      <tr>
+        <td>Phone number</td>
+        <td><input type="tel" name="phone" placeholder="xxx-xxx-xxxx" required ></td>
+      </tr>
+      <tr>
+        <td>Email</td>
+        <td><input type="email" placeholder="you@there.com" name="email" required></td>
+      </tr>
+      <tr>
+        <td>Password</td>
+        <td><input type="password" name="password" required ></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <div align="center"> <input value="Create" type="submit"> </div>
+</form>
+
+</body></html>

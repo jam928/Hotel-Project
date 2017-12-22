@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html><head>
+  
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+  <title>Make a reservation</title>
+  <link rel="stylesheet" type="text/css" href="../css/style.css">
+
+    <script src="jquery.min.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="jquery.easing.js"></script>
+
+    
+    
+  <script type="text/javascript">
+    
+    
+    function validate_dates(check_in, check_out){
+	var date1 = new Date(check_in);
+	var date2 = new Date(check_out);
+	if (date2 < date1){
+		alert("Check-out date cannot be before check-in date");
+		return false;
+	}
+	return true;
+    }
+
+    
+    $(document).ready( function() {
+        // set up the datepicker widgets for checkin and checkout
+        $( ".date_check" ).datepicker({dateFormat: "yy-mm-dd"});
+        
+        // populate the country control with choices        
+        $.ajax({
+            url: "get_countries.jsp", 
+            success: function(result){
+                // clear previous contents from control
+                $('#select_country').find('option').remove().end().append('<option value="---">---</option>');
+                        
+                for (i=0;i<result.length;i++) {                
+                     $("#select_country").append( $("<option />").val(result[i]).text(result[i]) );
+                }    
+                
+            },
+            
+            error: function() {
+                $('#console').append('An error occurred getting the countries. ');
+            }            
+        });
+        
+        // country selected, determine states for that country
+        $( "#select_country" ).change(function() {
+            if (this.value !== '---') {
+                // populate the state control with choices        
+                $.ajax({
+                    url: "get_states.jsp?country=" + this.value, 
+                    success: function(result){
+                        // clear previous contents from control
+                        $('#select_state').find('option').remove().end().append('<option value="---">---</option>');
+                            
+                        for (i=0;i<result.length;i++) {                
+                             $("#select_state").append( $("<option />").val(result[i]).text(result[i]) );
+                        }
+                        $("#label_state").css('visibility', 'visible');
+                    },
+                    error: function() {
+                        $('#console').append('An error occurred getting the states. ');
+                    }                     
+                });          
+            }
+        });
+
+        // state selected, determine hotels
+        $( "#select_state" ).change(function() {
+            if ((this.value !== '---') && ($("#select_country").val != '---')){
+                // populate the hotels in the country and state
+                $.ajax({
+                    url: "get_hotels.jsp?state=" + this.value + "&country=" + $("#select_country").val(),
+                    
+                    success: function(result){
+                        // clear previous contents from control
+                        $('#select_hotel').find('option').remove().end().append('<option value="---">---</option>');
+    
+                        for (i=0;i<result.length;i++) {                
+                             $("#select_hotel").append( $("<option />").val(result[i].hotelid).text(result[i].hotel_loc) );
+                        }
+                        $("#label_hotel").css('visibility', 'visible');
+                    },
+                    error: function() {
+                        $('#console').append('An error occurred getting the hotels list. ');
+                    }                     
+                });                   
+            }
+        });
+        
+        // hotel select, determine rooms types
+        $( "#select_hotel" ).change(function() {
+            if (this.value !== '---'){
+                // populate the room types
+                $.ajax({
+                    url: "get_roomtypes.jsp?hotelid=" + this.value,
+                    
+                    success: function(result){
+                        // clear previous contents from control
+                        $('#select_roomtype').find('option').remove().end().append('<option value="---">---</option>');
+    
+                        for (i=0;i<result.length;i++) {                
+                             $("#select_roomtype").append( $("<option />").val(result[i]).text(result[i]) );
+                        }
+                        $("#date_checkin").val("");
+                        $("#date_checkout").val("");
+                        $("#div_checkin_checkout_roomtype").css('visibility', 'visible');
+                    },
+                    error: function() {
+                        $('#console').append('An error occurred getting the room types. ');
+                    }                     
+                });                   
+            }
+        });
+        
+        // get the rooms
+        $( "#select_roomtype, #date_checkin, #date_checkout" ).change(function() {
+            if ($("#select_roomtype").val() !== '---' && $("#date_checkin").val() !== '' && $("#date_checkout").val() !== '' && validate_dates($("#date_checkin").val(), $("#date_checkout").val()) ){
+                // populate the rooms available
+                
+                // clear previous contents from control
+                $("#div_roomslist").empty();
+                
+                $.ajax({
+                    url: "get_rooms.jsp?hotelid=" + $("#select_hotel").val() + "&checkin=" + $("#date_checkin").val() + "&checkout=" + $("#date_checkout").val() + "&roomtype=" + $("#select_roomtype").val() ,
+                    
+                    success: function(result){
+                        var html = "";
+                        
+                        if (result.length == 0) {
+                            html="No rooms of that type available at that Hotel during that time period. Please try again.";
+                        } else {
+                            $.each(result, function(k, v) {
+                                html += "<div class=\"room\"><div style=\"float:left;margin-right:20px;\">" + v.Image_HTML + "</div><div><h1>" +  v.Description + "</h1>" +
+                                        "<p>Room <span class=\"room\">" + v.Room_no + "</span>" +
+                                        "<span class=\"price\">" + v.Price + "</span>" +
+                                        "<span class=\"price_total\"></span>" +
+                                        "<input type=\"checkbox\" class=\"check_room\" id=\"check_room_" + v.Room_no + "\" ></p><p>" ;
+                                        if (v.Discount > 0 ) {
+                                            html += "<span class=\"discount\">" + v.Discount + "% Discount</span>";
+                                        }
+                                        html += "<button>+ Add Service</button>" +
+                                        "<button>+ Add Breakfast</button>" +
+                                        "</p></div></div>";
+
+                            });
+                        }
+
+                        $("#div_roomslist").html(html);
+                        
+                    },
+                    error: function() {
+                        $('#console').append('An error occurred getting the rooms. ');
+                    }                     
+                });                   
+            }
+        });
+        
+        function get_total() {
+            var total=0;
+            
+            // determine how many days
+            var date1 = new Date($("#date_checkin").val() );
+            var date2 = new Date($("#date_checkout").val() );
+            var timeDiff = Math.abs(date2.getTime() - date1.getTime());
+            var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+
+            $(".room").each(function( index) {
+                if ($(this).find(".check_room").is(":checked")) {
+                    var price_per_night = parseFloat($(this).find(".price").html());
+                    
+                    $(this).find(".price_total").html((price_per_night * diffDays).toFixed(2));
+                    total = total + (price_per_night * diffDays); 
+                }              
+            });           
+            
+            return total.toFixed(2);
+        }
+        
+        // determine and display the total
+        $( "#div_roomslist" ).on( "change", ".check_room", function() {
+            // loop thru all rooms, if checked, add to the total
+
+            // display the total
+            $("#span_total").html( get_total() );
+            
+            if ($("#span_total").html().trim() !== "" && $("#span_total").html().trim() !== "0.00") {
+                // show the checkout
+                $("#div_roomsprice").show();
+            } else {
+                // hide the checkout
+                $("#div_roomsprice").hide();
+            }
+                
+            
+        });
+
+        
+        $("#button_checkout").click(function() {
+            
+            // POST request for billing, on success(200 , for now),
+            if ($.isNumeric( $("#input_cc_num").val())) {
+                // populate the state control with choices        
+                $.ajax({
+                    url: "creditcard.jsp",
+                    data: "creditcard=" + $("#input_cc_num").val() + "&total=" + get_total(),
+                    
+                    success: function(result){
+                        
+                        $('#console').append(result + ". ");
+                        
+                        
+                        $(".room").each(function( index) {
+                            if ($(this).find(".check_room").is(":checked")) {
+                                // create one Reservation record for each room checked
+                                                        
+                                $.ajax({
+                                    url: "reservation.jsp",
+                                    data: "total=" + $(this).find(".price_total").html() + "&Room_no=" +
+                                            $(this).find(".room").html() + "&HotelID=" +  $("#select_hotel").val() + "&date_checkin=" + $("#date_checkin").val() +
+                                            "&date_checkout=" + $("#date_checkout").val() + "&creditcard=" + $("#input_cc_num").val() ,
+
+                                    success: function(result){
+                                        $('#console').append('Room booked. ');     
+                                    },
+                                    error: function(result){ 
+                                        $('#console').append('An error occurred reserving the room. ');
+                                    }  
+                                    
+                                });
+                                
+                            }
+                        }); // foreach room
+                        
+                        $('#console').append("Booking complete. Please print a copy for your records. ");
+                        
+                    },
+                    error: function() {
+                        $('#console').append('An error occurred saving the customers credit card. ');
+                    }                     
+                });          
+            }            
+            // POST/ INSERT for each room
+            
+        });
+        
+        // Scroll automatically to the bottom of a div as it is continually appended/written to
+        $("#console").bind("append", function() { 
+            $(this).animate({ scrollTop: $(this)[0].scrollHeight }, 180, "easeOutExpo"); 
+        });
+
+    }); //doc.ready
+
+
+  </script>
+
+    
+</head><body>
+<h1>Hotel Reservation System</h1>
+<ul>
+<li><a class="active" href="../Welcome.jsp">Home</a></li>
+<li><a href="../ReservationStatistics.html">Administrator</a></li>
+</ul>
+
+<div id="console" ></div>
+
+<label >Country
+    <select id ="select_country">
+        <option value="---">---</option>
+    </select>
+</label>
+
+<label id="label_state" style="visibility:hidden">State
+    <select id ="select_state">
+        <option value="---">---</option>
+    </select>
+</label>
+
+<label id="label_hotel" style="visibility:hidden">Hotels
+    <select id ="select_hotel">
+        <option value="---">---</option>
+    </select>
+</label>
+
+<div id="div_checkin_checkout_roomtype" style="visibility:hidden;">
+    
+    <label>Check In Date
+        <input type="text" id="date_checkin" class="date_check">
+    </label>
+    
+    <label>Check Out Date 
+        <input type="text" id="date_checkout" class="date_check">
+    </label>
+    
+    <label >Room Type
+        <select id ="select_roomtype">
+            <option value="---">---</option>
+        </select>
+    </label>
+
+    
+</div>
+
+<div id="div_rooms" style="clear:both">
+    
+    <div id="div_roomslist" style="float:left;width:66%;"></div>
+    
+    <div id ="div_roomsprice" style="float:right;width:33%;display:none;">
+        
+        <label style="">Total
+            $<span id="span_total"></span>
+        </label>
+        <br>
+        <label style="">Credit Card
+            <input type="text" id="input_cc_num" class="" size="16" value="4111111111111111">
+        </label>
+        <label style="word-wrap:nowrap;">Expiration
+            <select>
+                <option>mm</option>
+                <option>01</option><option>02</option><option>03</option><option>04</option>
+                <option>05</option><option>06</option><option>07</option><option>08</option>
+                <option>09</option><option>10</option><option>11</option><option>12</option>
+            </select>/<select>
+                <option>yy</option>
+                <option>17</option><option>18</option><option>19</option><option>20</option><option>21</option>
+            </select>            
+        </label>        
+        
+        <label>Code
+            <input type="text" size="4" id="input_cc_exp">
+        </label>   
+        
+        <label style="">Name On Card
+            <input type="text" size="16" id="input_cc_name">
+        </label>   
+        
+        <label style="">Billing Addr1
+            <input type="text" size="16" id="input_cc_addr">
+        </label>           
+
+        <button id="button_checkout" style="float:left;clear:both;margin-left:15px;">Checkout</button>
+    </div>
+</div>
+
+
+</body></html>
