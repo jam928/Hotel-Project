@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('My reservations')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('reservations')}"></header>
+<div th:replace="~{fragments/layout :: notice}"></div>
+
+<main class="w-full flex-1 mx-auto max-w-4xl px-4 py-10">
+	<div class="flex flex-wrap items-end justify-between gap-4">
+		<div>
+			<h1 class="text-3xl font-bold tracking-tight text-slate-900">My reservations</h1>
+			<p class="mt-2 text-slate-600">Your stays, most recent first.</p>
+		</div>
+		<a th:href="@{/hotels}" class="btn-primary">Find a hotel</a>
+	</div>
+
+	<div th:if="${#lists.isEmpty(reservations)}" class="card mt-8 text-center">
+		<p class="font-medium text-slate-900">No reservations yet</p>
+		<p class="mt-1 text-sm text-slate-500">When you book a room it will show up here.</p>
+	</div>
+
+	<ul th:unless="${#lists.isEmpty(reservations)}" class="mt-8 space-y-4">
+		<li th:each="r : ${reservations}" class="card flex flex-wrap items-center gap-4 sm:flex-nowrap">
+			<div class="grid size-12 shrink-0 place-items-center rounded-xl bg-brand-50 text-lg font-semibold text-brand-700 dark:bg-brand-500/15 dark:text-brand-300"
+				th:text="${r.roomNo()}">101</div>
+			<div class="min-w-0 flex-1">
+				<p class="truncate font-semibold text-slate-900" th:text="${r.description()} ?: |Room ${r.roomNo()}|">Room</p>
+				<p class="mt-0.5 text-sm text-slate-500">
+					<span th:text="${#temporals.format(r.inDate(), 'EEE, MMM d, yyyy')}">in</span>
+					→
+					<span th:text="${r.outDate()} ? ${#temporals.format(r.outDate(), 'EEE, MMM d, yyyy')} : '—'">out</span>
+					· Hotel <span th:text="${r.hotelId()}">1</span>
+					· Invoice #<span th:text="${r.invoiceNo()}">1</span>
+				</p>
+			</div>
+			<form th:action="@{/reservations/{id}/cancel(id=${r.invoiceNo()})}" method="post"
+				th:attr="data-confirm=|Cancel your reservation for room ${r.roomNo()}?|"
+				onsubmit="return confirm(this.dataset.confirm)">
+				<button type="submit" class="btn-secondary text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">Cancel</button>
+			</form>
+		</li>
+	</ul>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Write a review')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('reviews')}"></header>
+
+<main class="w-full flex-1 mx-auto max-w-2xl px-4 py-10">
+	<div class="card p-8">
+		<h1 class="text-2xl font-semibold text-slate-900"
+			th:text="${kind.label() == 'room'} ? |Review room ${form.item}| : |Review ${form.item} ${kind.label()}|">Write a review</h1>
+		<p class="mt-1 text-sm text-slate-500" th:text="|Hotel ${form.hotelId}|">Hotel</p>
+
+		<form th:action="@{/review/{kind}(kind=${kind.label()})}" th:object="${form}" method="post" class="mt-6 space-y-6" novalidate>
+			<input type="hidden" th:field="*{item}">
+			<input type="hidden" th:field="*{hotelId}">
+			<div th:replace="~{fragments/layout :: globalErrors}"></div>
+
+			<fieldset>
+				<legend class="label">Rating</legend>
+				<div class="flex gap-3">
+					<label th:each="r : ${#numbers.sequence(1, 3)}"
+						class="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 has-checked:border-brand-500 has-checked:bg-brand-50 has-checked:text-brand-700 dark:has-checked:bg-brand-500/15 dark:has-checked:text-brand-300">
+						<input type="radio" th:field="*{rating}" th:value="${r}" class="accent-brand-600">
+						<span class="font-medium" th:text="${r == 1} ? '1 · Poor' : (${r == 2} ? '2 · Good' : '3 · Great')">1</span>
+					</label>
+				</div>
+				<p class="field-error" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}">Error</p>
+			</fieldset>
+
+			<div>
+				<label class="label" for="comment">Your review</label>
+				<textarea th:field="*{comment}" rows="5" maxlength="2000" class="input" th:errorclass="input-error"
+					placeholder="What did you like? What could be better?"></textarea>
+				<p class="field-error" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}">Error</p>
+			</div>
+
+			<div class="flex gap-3">
+				<button type="submit" class="btn-primary">Submit review</button>
+				<a th:href="@{/review/{kind}(kind=${kind.label()},item=${form.item},hotelid=${form.hotelId})}" class="btn-secondary">Cancel</a>
+			</div>
+		</form>
+	</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Administrator sign in')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('admin')}"></header>
+
+<main class="w-full flex-1 mx-auto max-w-md px-4 py-12">
+	<div class="card p-8">
+		<h1 class="text-2xl font-semibold text-slate-900">Administrator sign in</h1>
+		<p class="mt-1 text-sm text-slate-500">For hotel staff only.</p>
+		<!--/* As in the original site, this check happens only in the browser. */-->
+		<form id="admin-form" th:action="@{/statistics}" method="get" class="mt-6 space-y-4">
+			<p id="admin-error" class="hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300" role="alert">
+				Incorrect username or password.
+			</p>
+			<div>
+				<label class="label" for="username">Username</label>
+				<input id="username" class="input" autocomplete="username" required>
+			</div>
+			<div>
+				<label class="label" for="admin-password">Password</label>
+				<input id="admin-password" type="password" class="input" autocomplete="current-password" required>
+			</div>
+			<button type="submit" class="btn-primary w-full">Sign in</button>
+		</form>
+	</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+<script>
+	document.getElementById('admin-form').addEventListener('submit', (event) => {
+		const ok = document.getElementById('username').value === 'admin'
+			&& document.getElementById('admin-password').value === 'password';
+		document.getElementById('admin-error').classList.toggle('hidden', ok);
+		if (!ok) event.preventDefault();
+	});
+</script>
+</body>
+</html>

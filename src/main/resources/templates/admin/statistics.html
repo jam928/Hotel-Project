@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reservation statistics')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('admin')}"></header>
+
+<main class="w-full flex-1 mx-auto max-w-4xl px-4 py-10">
+	<h1 class="text-3xl font-bold tracking-tight text-slate-900">Reservation statistics</h1>
+	<p class="mt-2 text-slate-600">Run a report over stays within a date range.</p>
+
+	<form th:action="@{/statistics}" th:object="${form}" method="post" class="card mt-8 grid gap-4 sm:grid-cols-3" novalidate>
+		<div th:insert="~{fragments/layout :: field('beginDate', 'Begin date', 'date', '', 'off')}"></div>
+		<div th:insert="~{fragments/layout :: field('endDate', 'End date', 'date', '', 'off')}"></div>
+		<div>
+			<label class="label" for="report">Report</label>
+			<select th:field="*{report}" class="input" th:errorclass="input-error">
+				<option th:each="r : ${reports}" th:value="${r}" th:text="${r.title}">Report</option>
+			</select>
+			<p class="field-error" th:if="${#fields.hasErrors('report')}" th:errors="*{report}">Error</p>
+		</div>
+		<p class="field-error sm:col-span-3" th:if="${#fields.hasErrors('dateRangeValid')}" th:errors="*{dateRangeValid}">Error</p>
+		<div class="sm:col-span-3">
+			<button type="submit" class="btn-primary">Run report</button>
+		</div>
+	</form>
+
+	<section th:if="${lines != null}" class="card mt-8">
+		<h2 class="font-semibold text-slate-900" th:text="${form.report.title}">Results</h2>
+		<p class="mt-1 text-sm text-slate-500"
+			th:text="|${#temporals.format(form.beginDate, 'MMM d, yyyy')} – ${#temporals.format(form.endDate, 'MMM d, yyyy')}|">Range</p>
+		<p th:if="${#lists.isEmpty(lines)}" class="mt-4 text-sm text-slate-500">No results for that date range.</p>
+		<ol th:unless="${#lists.isEmpty(lines)}" class="mt-4 divide-y divide-slate-100">
+			<li th:each="line, s : ${lines}" class="flex gap-4 py-3">
+				<span class="w-6 text-right font-medium text-slate-400" th:text="${s.count}">1</span>
+				<span class="text-slate-800" th:text="${line} ?: '—'">Line</span>
+			</li>
+		</ol>
+	</section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

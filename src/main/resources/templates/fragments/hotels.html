@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* The hotel's photo with its city on top. Without a photo (or if it fails to load) a
+       coloured gradient picked from the hotel ID shows instead. */-->
+<div th:fragment="banner(hotel)"
+	class="relative flex h-full items-end overflow-hidden bg-linear-to-br p-5 text-white"
+	th:classappend="${hotel.id % 4 == 0} ? 'from-emerald-500 to-teal-800' : (${hotel.id % 4 == 1} ? 'from-brand-500 to-cyan-800' : (${hotel.id % 4 == 2} ? 'from-sky-500 to-indigo-700' : 'from-amber-400 to-rose-600'))">
+	<svg class="absolute -right-4 -bottom-6 size-40 text-white/15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+		<path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4h2a2 2 0 0 1 2 2v10h1v2H3v-2h1Zm2 0h4v-4h4v4h4V11h-4V5H6v16Zm2-14h2v2H8V7Zm4 0h2v2h-2V7Zm-4 4h2v2H8v-2Zm4 0h2v2h-2v-2Zm6 2h-2v2h2v-2Z"/>
+	</svg>
+	<th:block th:if="${hotel.imageKey}">
+		<img th:src="@{'/images/' + ${hotel.imageKey}}" th:alt="|Photo of ${hotel.name}|" loading="lazy"
+			class="absolute inset-0 size-full object-cover" onerror="this.remove()">
+		<div class="absolute inset-0 bg-linear-to-t from-black/65 via-black/15 to-transparent"></div>
+	</th:block>
+	<div class="relative">
+		<p class="text-xs font-semibold tracking-wide text-white/80 uppercase" th:text="${hotel.country}">Country</p>
+		<p class="text-2xl font-bold" th:text="${hotel.city}">City</p>
+	</div>
+</div>
+
+<!--/* Review score, e.g. "★ 2.8 Great · 5 reviews", or "New" without reviews. */-->
+<p th:fragment="rating(card)" class="flex items-center gap-1.5 text-sm">
+	<th:block th:if="${card.rating()}">
+		<span class="inline-flex items-center gap-1 rounded-md bg-brand-600 px-1.5 py-0.5 text-xs font-semibold text-white">
+			<svg class="size-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.5 7.7l5.9-.9L10 1.5Z"/></svg>
+			<span th:text="${#numbers.formatDecimal(card.rating(), 1, 1)}">2.8</span>
+		</span>
+		<span class="font-medium text-slate-800" th:text="${card.ratingLabel()}">Great</span>
+		<span class="text-slate-500" th:text="|· ${card.reviewCount()} review${card.reviewCount() == 1 ? '' : 's'}|">· 5 reviews</span>
+	</th:block>
+	<span th:unless="${card.rating()}" class="rounded-md bg-slate-100 px-1.5 py-0.5 text-xs font-semibold text-slate-600">New</span>
+</p>
+
+</body>
+</html>

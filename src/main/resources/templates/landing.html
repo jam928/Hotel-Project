@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Welcome')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('')}"></header>
+<div th:replace="~{fragments/layout :: notice}"></div>
+
+<main class="w-full flex-1">
+	<section class="bg-linear-to-br from-brand-700 via-brand-600 to-cyan-800 text-white">
+		<div class="mx-auto max-w-6xl px-4 pt-16 pb-24 lg:pt-24 lg:pb-32">
+			<p class="text-sm font-semibold tracking-wide text-brand-100 uppercase">Welcome to Hulton Hotels</p>
+			<h1 class="mt-3 max-w-2xl text-4xl font-bold tracking-tight sm:text-5xl">Your other home away from home.</h1>
+			<p class="mt-4 max-w-xl text-lg text-white/85">
+				Search live availability across our hotels, pick the room that suits you, and book in a few steps.
+			</p>
+		</div>
+	</section>
+
+	<div class="mx-auto -mt-16 max-w-6xl px-4">
+		<form th:action="@{/hotels}" method="get" th:object="${search}"
+			class="card grid gap-4 p-5 shadow-lg sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto] lg:items-end">
+			<div>
+				<label class="label" for="destination">Destination</label>
+				<select id="destination" name="destination" class="input">
+					<option value="">All destinations</option>
+					<option th:each="d : ${destinations}" th:value="${d.key}" th:text="${d.value}">New York, NY</option>
+				</select>
+			</div>
+			<div>
+				<label class="label" for="checkin">Check-in</label>
+				<input id="checkin" name="checkin" type="date" class="input" th:value="*{checkin}" th:min="${today}" required>
+			</div>
+			<div>
+				<label class="label" for="checkout">Check-out</label>
+				<input id="checkout" name="checkout" type="date" class="input" th:value="*{checkout}" th:min="${today.plusDays(1)}" required>
+			</div>
+			<div>
+				<label class="label" for="guests">Guests</label>
+				<select id="guests" name="guests" class="input">
+					<option th:each="g : ${#numbers.sequence(1, 6)}" th:value="${g}" th:text="${g == 1} ? '1 guest' : |${g} guests|"
+						th:selected="${g == search.guests}">1 guest</option>
+				</select>
+			</div>
+			<button type="submit" class="btn-primary h-[42px] px-6">Search</button>
+		</form>
+	</div>
+
+	<section class="mx-auto max-w-6xl px-4 pt-16">
+		<div class="flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<h2 class="text-2xl font-bold tracking-tight text-slate-900">Popular hotels</h2>
+				<p class="mt-1 text-slate-600">Where our guests book most, and what they thought of it.</p>
+			</div>
+			<a th:href="@{/hotels}" class="link text-sm">See all hotels →</a>
+		</div>
+
+		<p th:if="${#lists.isEmpty(popular)}" class="card mt-6 text-center text-slate-500">No hotels yet.</p>
+
+		<div class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+			<a th:each="card : ${popular}" th:with="hotel=${card.hotel()}"
+				th:href="@{/hotels/{id}(id=${hotel.id},checkin=${search.checkin},checkout=${search.checkout})}"
+				class="group overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+				<div class="h-36" th:insert="~{fragments/hotels :: banner(${hotel})}"></div>
+				<div class="p-5">
+					<h3 class="font-semibold text-slate-900 group-hover:text-brand-700 dark:group-hover:text-brand-300" th:text="${hotel.name}">Hulton New York</h3>
+					<p class="mt-0.5 text-sm text-slate-500" th:text="|${hotel.street}, ${hotel.location}|">250 Park Ave, New York, NY</p>
+					<div class="mt-3" th:insert="~{fragments/hotels :: rating(${card})}"></div>
+					<div class="mt-4 flex items-end justify-between border-t border-slate-100 pt-4">
+						<p class="text-sm text-slate-500" th:text="${card.bookingCount() == 1} ? 'Booked once' : |Booked ${card.bookingCount()} times|">Booked 3 times</p>
+						<p th:if="${card.fromPrice()}" class="text-right text-sm text-slate-500">
+							from <span class="text-lg font-semibold text-slate-900" th:text="${'$' + #numbers.formatDecimal(card.fromPrice(), 1, 'COMMA', 0, 'POINT')}">$129</span> / night
+						</p>
+					</div>
+				</div>
+			</a>
+		</div>
+	</section>
+
+	<section class="mx-auto grid max-w-6xl gap-6 px-4 pt-16 sm:grid-cols-3">
+		<div>
+			<p class="flex items-center gap-2 font-semibold text-slate-900"><span class="size-2 rounded-full bg-brand-500"></span>Live availability</p>
+			<p class="mt-1 text-sm text-slate-600">See exactly which rooms are free for your dates before you book.</p>
+		</div>
+		<div>
+			<p class="flex items-center gap-2 font-semibold text-slate-900"><span class="size-2 rounded-full bg-brand-500"></span>Seasonal discounts</p>
+			<p class="mt-1 text-sm text-slate-600">Offers are applied automatically to eligible rooms.</p>
+		</div>
+		<div>
+			<p class="flex items-center gap-2 font-semibold text-slate-900"><span class="size-2 rounded-full bg-brand-500"></span>Honest reviews</p>
+			<p class="mt-1 text-sm text-slate-600">Guests rate the rooms, breakfasts and services they used.</p>
+		</div>
+	</section>
+
+	<section th:unless="${customerName}" class="mx-auto max-w-6xl px-4 pt-16">
+		<div class="card flex flex-wrap items-center justify-between gap-4">
+			<div>
+				<p class="font-semibold text-slate-900">Already staying with us?</p>
+				<p class="text-sm text-slate-500">Sign in to see your reservations and review your stay.</p>
+			</div>
+			<div class="flex gap-3">
+				<a th:href="@{/signup}" class="btn-secondary">Create account</a>
+				<a th:href="@{/login}" class="btn-primary">Sign in</a>
+			</div>
+		</div>
+	</section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

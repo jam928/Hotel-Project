@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Account')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('account')}"></header>
+<div th:replace="~{fragments/layout :: notice}"></div>
+
+<main class="w-full flex-1 mx-auto max-w-3xl space-y-8 px-4 py-12">
+	<div class="card p-8">
+		<h1 class="text-2xl font-semibold text-slate-900">Account details</h1>
+		<p class="mt-1 text-sm text-slate-500">Update your contact information. Enter your password to confirm.</p>
+		<form th:action="@{/account/edit}" th:object="${form}" method="post" class="mt-6 grid gap-4 sm:grid-cols-2" novalidate>
+			<div class="sm:col-span-2" th:insert="~{fragments/layout :: field('name', 'Full name', 'text', '', 'name')}"></div>
+			<div class="sm:col-span-2" th:insert="~{fragments/layout :: field('address', 'Address', 'text', '', 'street-address')}"></div>
+			<div th:insert="~{fragments/layout :: field('phone', 'Phone number', 'tel', '555-555-5555', 'tel')}"></div>
+			<div th:insert="~{fragments/layout :: field('email', 'Email', 'email', '', 'email')}"></div>
+			<div class="sm:col-span-2" th:insert="~{fragments/layout :: field('password', 'Password', 'password', '', 'current-password')}"></div>
+			<div class="flex gap-3 sm:col-span-2">
+				<button type="submit" class="btn-primary">Save changes</button>
+				<a th:href="@{/welcome}" class="btn-secondary">Cancel</a>
+			</div>
+		</form>
+	</div>
+
+	<section class="card p-8" aria-labelledby="cards-heading">
+		<h2 id="cards-heading" class="text-xl font-semibold text-slate-900">Saved cards</h2>
+		<p class="mt-1 text-sm text-slate-500">Cards saved to your account when you paid with them. Use the same expiry and security code when you pay with one again.</p>
+		<p th:if="${#lists.isEmpty(cards)}" class="mt-6 text-sm text-slate-500">No saved cards yet. A card is saved the first time you pay with it.</p>
+		<ul th:unless="${#lists.isEmpty(cards)}" class="mt-6 grid gap-4 sm:grid-cols-2">
+			<li th:each="saved : ${cards}" th:with="c=${saved.card()}" class="flex flex-col rounded-xl border border-slate-200 p-4">
+				<div class="flex items-center justify-between gap-3">
+					<p class="font-semibold text-slate-900" th:text="${c.typeLabel}">Visa</p>
+					<span th:if="${c.isExpired(currentMonth)}"
+						class="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/40 dark:text-red-300">Expired</span>
+				</div>
+				<p class="mt-2 font-mono tracking-wider text-slate-700" th:text="|•••• •••• •••• ${c.lastFour}|">•••• 4242</p>
+				<p class="mt-2 text-sm text-slate-500">
+					<span th:text="${c.name}">Name</span>
+					· Expires <span th:text="${#temporals.format(c.expires, 'MM/yy')}">12/29</span>
+				</p>
+				<p class="truncate text-sm text-slate-500" th:text="${c.billingAddress}">Billing address</p>
+				<form th:action="@{/account/cards/{id}/remove(id=${saved.id()})}" method="post" class="mt-4"
+					th:attr="data-confirm=|Remove the ${c.typeLabel} ending in ${c.lastFour} from your account?|"
+					onsubmit="return confirm(this.dataset.confirm)">
+					<button type="submit" class="btn-secondary text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+						th:attr="aria-label=|Remove ${c.typeLabel} ending in ${c.lastFour}|">Remove</button>
+				</form>
+			</li>
+		</ul>
+	</section>
+
+	<section class="card p-8" aria-labelledby="payments-heading">
+		<h2 id="payments-heading" class="text-xl font-semibold text-slate-900">Payment history</h2>
+		<p class="mt-1 text-sm text-slate-500">What you paid for each stay, latest first. Cancelled stays are not listed.</p>
+		<p th:if="${#lists.isEmpty(payments)}" class="mt-6 text-sm text-slate-500">No payments yet.</p>
+		<ul th:unless="${#lists.isEmpty(payments)}" class="mt-4 divide-y divide-slate-100">
+			<li th:each="p : ${payments}" class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-4">
+				<div class="min-w-0">
+					<p class="font-medium text-slate-900" th:text="|${p.hotelName()} · Room ${p.roomNo()}|">Hulton Toronto · Room 101</p>
+					<p class="mt-0.5 text-sm text-slate-500">
+						<span th:text="${#temporals.format(p.inDate(), 'MMM d')}">in</span>
+						→
+						<span th:text="${p.outDate()} ? ${#temporals.format(p.outDate(), 'MMM d, yyyy')} : '—'">out</span>
+						· Paid <span th:text="${#temporals.format(p.paidOn(), 'MMM d, yyyy')}">date</span>
+						with <span th:text="${p.cardLabel()}">Visa •••• 4242</span>
+						· Invoice #<span th:text="${p.invoiceNo()}">1</span>
+					</p>
+				</div>
+				<p class="font-semibold tabular-nums text-slate-900"
+					th:text="${p.amount()} ? |$${#numbers.formatDecimal(p.amount(), 1, 'COMMA', 2, 'POINT')}| : '—'">$0.00</p>
+			</li>
+		</ul>
+	</section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

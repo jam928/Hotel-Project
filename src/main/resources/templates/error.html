@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Something went wrong')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('')}"></header>
+
+<main class="w-full flex-1 mx-auto max-w-lg px-4 py-20 text-center">
+	<p class="text-sm font-semibold text-brand-600 dark:text-brand-400" th:text="${status}">500</p>
+	<h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900"
+		th:text="${status == 404} ? 'Page not found' : 'Something went wrong'">Something went wrong</h1>
+	<p class="mt-3 text-slate-600"
+		th:text="${status == 404} ? 'We couldn’t find the page you were looking for.' : 'Please try again in a moment.'">Please try again.</p>
+	<a th:href="${customerName} ? @{/welcome} : @{/}" class="btn-primary mt-8">Back to home</a>
+</main>
+</body>
+</html>

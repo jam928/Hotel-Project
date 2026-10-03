@@ -1,0 +1,79 @@
+services:
+  mysql:
+    image: 'mysql:8.4'
+    # The schema (from MySQL 5.7) has foreign keys that reference part of a
+    # composite primary key, which MySQL 8.4 rejects by default.
+    command: '--restrict-fk-on-non-standard-key=OFF'
+    environment:
+      - 'MYSQL_DATABASE=project'
+      - 'MYSQL_USER=hulton'
+      - 'MYSQL_PASSWORD=hulton'
+      - 'MYSQL_ROOT_PASSWORD=root'
+    ports:
+      - '${MYSQL_PORT:-3306}:3306'
+    volumes:
+      # Tables are created by the app's Flyway migrations (src/main/resources/db).
+      - 'mysql-data:/var/lib/mysql'
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-uhulton', '-phulton']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # Object storage for hotel and room photos. The app creates the bucket and uploads the
+  # sample photos (src/main/resources/sample-images) on startup. Console: http://localhost:9001
+  # (log in with the root user below). The official minio/minio image is no longer updated,
+  # so this uses a community build of the same server.
+  minio:
+    image: 'pgsty/minio:RELEASE.2026-08-04T00-00-00Z'
+    command: 'server /data --console-address :9001'
+    environment:
+      - 'MINIO_ROOT_USER=hulton'
+      - 'MINIO_ROOT_PASSWORD=hulton-secret'
+    ports:
+      - '${MINIO_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - 'minio-data:/data'
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # The app itself, run from source with `mvn spring-boot:run`. It is in the "app" profile so
+  # `docker compose up` (and Spring Boot's Docker Compose support when you run the app from an IDE)
+  # only starts the services above. Start everything with: docker compose --profile app up
+  app:
+    profiles: ['app']
+    image: 'maven:3.9-eclipse-temurin-21'
+    working_dir: '/workspace'
+    command: 'mvn -B spring-boot:run'
+    environment:
+      - 'DB_URL=jdbc:mysql://mysql:3306/project'
+      - 'MINIO_URL=http://minio:9000'
+      # The app is already inside Compose, so it must not try to start it again.
+      - 'SPRING_DOCKER_COMPOSE_ENABLED=false'
+    ports:
+      - '${APP_PORT:-8080}:8080'
+    volumes:
+      - '.:/workspace'
+      # Keep the container's Linux Node and build output apart from the host's.
+      - 'app-node:/workspace/node'
+      - 'app-node-modules:/workspace/node_modules'
+      - 'app-target:/workspace/target'
+      # Downloaded Maven dependencies, kept between runs.
+      - 'maven-repo:/root/.m2'
+    depends_on:
+      mysql:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  mysql-data:
+  minio-data:
+  app-node:
+  app-node-modules:
+  app-target:
+  maven-repo:

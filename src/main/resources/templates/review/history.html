@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Reviews')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('reviews')}"></header>
+
+<main class="w-full flex-1 mx-auto max-w-6xl px-4 py-10">
+	<h1 class="text-3xl font-bold tracking-tight text-slate-900">Leave a review</h1>
+	<p class="mt-2 text-slate-600">Pick something from your stays to see your reviews or write a new one.</p>
+
+	<div class="mt-8 grid gap-6 lg:grid-cols-3">
+		<section th:each="group : ${groups}" class="card">
+			<h2 class="font-semibold text-slate-900" th:text="${group.title()}">Rooms</h2>
+			<p th:if="${#lists.isEmpty(group.items())}" class="mt-3 text-sm text-slate-500">Nothing to review yet.</p>
+			<ul th:unless="${#lists.isEmpty(group.items())}" class="mt-3 divide-y divide-slate-100">
+				<li th:each="i : ${group.items()}">
+					<a th:href="@{/review/{kind}(kind=${group.kind().label()},item=${i.item()},hotelid=${i.hotelId()})}"
+						class="-mx-2 flex items-center justify-between gap-3 rounded-lg px-2 py-3 hover:bg-slate-50">
+						<span>
+							<span class="block font-medium text-slate-900"
+								th:text="${i.roomtype()} ? |Room ${i.item()} · ${i.roomtype()}| : ${i.item()}">Item</span>
+							<span class="block text-sm text-slate-500"
+								th:text="|Hotel ${i.hotelId()} · booked ${#temporals.format(i.reservedOn(), 'MMM d, yyyy')}|">Hotel</span>
+						</span>
+						<span class="text-slate-400" aria-hidden="true">→</span>
+					</a>
+				</li>
+			</ul>
+		</section>
+	</div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

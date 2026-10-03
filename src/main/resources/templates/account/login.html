@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Sign in')}"></head>
+<body class="flex min-h-full flex-col bg-slate-50 font-sans text-slate-800 antialiased">
+<header th:replace="~{fragments/layout :: nav('')}"></header>
+<div th:replace="~{fragments/layout :: notice}"></div>
+
+<main class="w-full flex-1 mx-auto max-w-md px-4 py-12 lg:py-20">
+	<section class="card p-8">
+		<p th:if="${next != null and #strings.startsWith(next, '/booking')}"
+			class="mb-6 rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-700 dark:bg-brand-500/15 dark:text-brand-300">
+			Your room is on hold. Sign in to enter your payment details.
+		</p>
+		<h1 class="text-2xl font-semibold text-slate-900">Sign in</h1>
+		<p class="mt-1 text-sm text-slate-500">
+			New here? <a th:href="@{/signup(next=${next})}" class="link">Create an account</a>
+		</p>
+		<form th:action="@{/login}" th:object="${form}" method="post" class="mt-6 space-y-4" novalidate>
+			<input th:if="${next}" type="hidden" name="next" th:value="${next}">
+			<div th:replace="~{fragments/layout :: globalErrors}"></div>
+			<div th:replace="~{fragments/layout :: field('email', 'Email', 'email', 'you@example.com', 'email')}"></div>
+			<div th:replace="~{fragments/layout :: field('password', 'Password', 'password', '', 'current-password')}"></div>
+			<button type="submit" class="btn-primary w-full">Sign in</button>
+		</form>
+		<p class="mt-6 border-t border-slate-100 pt-4 text-center text-sm text-slate-500">
+			Staff? <a th:href="@{/admin/login}" class="link">Administrator sign in</a>
+		</p>
+	</section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
